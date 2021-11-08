@@ -4,7 +4,7 @@
 #include<iostream>
 
 int main(){
-
+/*
     // Basic Example of cpp
     std::cout << "Example of cpp \n";
     float a = 1.0, b = 2.0;
@@ -14,7 +14,7 @@ int main(){
     std::cout << std::acos(-1) << std::endl;
     std::cout << std::sin(30.0/180.0*acos(-1)) << std::endl;
 
-    // Example of vector
+    // Example of vectr
     std::cout << "Example of vector \n";
     // vector definition
     Eigen::Vector3f v(1.0f,2.0f,3.0f);
@@ -43,6 +43,14 @@ int main(){
     // matrix scalar multiply i * 2.0
     // matrix multiply i * j
     // matrix multiply vector i * v
+*/
+    Eigen::Vector3f p{2.0f,1.0f,1.0f};
+    Eigen::Matrix3f RM;
+
+    RM << std::sin(45.0/180*acos(-1)), -std::cos(45.0/180*acos(-1)), 1.0, std::cos(45.0/180*acos(-1)),std::sin(45.0/180*acos(-1)),2.0,0,0,1.0;
+    std::cout << RM << std::endl;
+    Eigen::Vector3f p1 = RM * p;
+    std::cout << p1 <<std::endl;
 
     return 0;
 }
