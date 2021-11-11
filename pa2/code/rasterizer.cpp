@@ -43,12 +43,19 @@ auto to_vec4(const Eigen::Vector3f& v3, float w = 1.0f)
 static bool insideTriangle(int x, int y, const Vector3f* _v)
 {   
     // TODO : Implement this function to check if the point (x, y) is inside the triangle represented by _v[0], _v[1], _v[2]
-    Eigen::Vector3f p = {x + 0.5f, y + 0.5f, 1.0f};
-    Eigen::Vector3f n1 = (_v[1] - _v[0]).cross(p - _v[0]);n1.normalize();
-    Eigen::Vector3f n2 = (_v[2] - _v[1]).cross(p - _v[1]);n2.normalize();
-    Eigen::Vector3f n3 = (_v[0] - _v[2]).cross(p - _v[2]);n3.normalize();
-    if(n1 == n2 && n2 == n3) return true;
-    else return false;
+    Eigen::Vector3f p(x + 0.5f, y + 0.5f,1.f);
+    Eigen::Vector3f v_01 = _v[1] - _v[0];
+    Eigen::Vector3f v_12 = _v[2] - _v[1];
+    Eigen::Vector3f v_20 = _v[0] - _v[2];
+    /*2Dcross
+        |x1 y1|   x1*y2 -x2*y1
+        |x2 y2|    
+    */
+    float z1 = v_01.x()*(p.y() - _v[0].y()) - (p.x() - _v[0].x())*v_01.y();
+    float z2 = v_12.x()*(p.y() - _v[1].y()) - (p.x() - _v[1].x())*v_12.y();
+    float z3 = v_20.x()*(p.y() - _v[2].y()) - (p.x() - _v[2].x())*v_20.y();
+    
+    return (z1 > 0 && z2 > 0 && z3 >0) || (z1 < 0 && z2 < 0 && z3 < 0);
 }
 
 static std::tuple<float, float, float> computeBarycentric2D(float x, float y, const Vector3f* v)
@@ -107,37 +114,17 @@ void rst::rasterizer::draw(pos_buf_id pos_buffer, ind_buf_id ind_buffer, col_buf
         rasterize_triangle(t);
     }
 }
-int _max(int a, int b, int c)
-{
-    if(a>b){if(a>c) return a;}
-    else if(b>c) return b;
-    return c;
-}
 
-int _min(int a, int b, int c)
-{
-    if(a<b){if(a<c) return a;}
-    else if(b<c) return b;
-    return c;
-}
 
 //Screen space rasterization
 void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     auto v = t.toVector4();
     
-    // TODO : Find out the bounding box of current triangle.
-    /*int xMin = std::min(std::begin(v),std::end(v),
-            [](const auto& p1, const auto& p2){return p1.x() < p2.x();})->x();
-    int xMax = std::max(std::begin(v),std::end(v),
-            [](const auto& p1, const auto& p2){return p1.x() > p2.x();})->x();
-    int yMin = std::min(std::begin(v),std::end(v),
-            [](const auto& p1, const auto& p2){return p1.y() < p2.y();})->y();
-    int yMax = std::max(std::begin(v),std::end(v),
-            [](const auto& p1, const auto& p2){return p1.y() > p2.y();})->y();*/
-    int xMin = _min(v[0].x(),v[1].x(),v[2].x());
-    int xMax = _max(v[0].x(),v[1].x(),v[2].x());
-    int yMin = _min(v[0].y(),v[1].y(),v[2].y());
-    int yMax = _max(v[0].y(),v[1].y(),v[2].y());
+    // TODO : Find out the bounding box of current triangle.               
+    int xMin = v[0].x() < v[1].x() ? v[0].x() : v[1].x() < v[2].x() ? v[1].x() : v[2].x();
+    int xMax = v[0].x() > v[1].x() ? v[0].x() : v[1].x() > v[2].x() ? v[1].x() : v[2].x();
+    int yMin = v[0].y() < v[1].y() ? v[0].y() : v[1].y() < v[2].y() ? v[1].y() : v[2].y();
+    int yMax = v[0].y() > v[1].y() ? v[0].y() : v[1].y() > v[2].y() ? v[1].y() : v[2].y();
     // iterate through the pixel and find if the current pixel is inside the triangle
     for(int x = xMin; x <= xMax; x++)
         for(int y = yMin; y <= yMax; y++){
@@ -152,8 +139,8 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
                 int buf_index = get_index(x, y);
                 if(z_interpolated < depth_buf[buf_index]){
                     // TODO : set the current pixel (use the set_pixel function) to the color of the triangle (use getColor function) if it should be painted.
-                    set_pixel(Vector3f(x, y, 1.f),t.getColor());
                     depth_buf[buf_index] = z_interpolated;
+                    set_pixel(Vector3f(x, y, 1.f),t.getColor());
                 } 
             }
     }
