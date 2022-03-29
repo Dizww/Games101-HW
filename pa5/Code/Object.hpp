@@ -30,7 +30,7 @@ public:
     // material properties
     MaterialType materialType;
     float ior;
-    float Kd, Ks;
+    float Kd, Ks;//漫反射系数,高光系数
     Vector3f diffuseColor;
     float specularExponent;
 };
