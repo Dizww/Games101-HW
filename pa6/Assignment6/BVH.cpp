@@ -105,5 +105,34 @@ Intersection BVHAccel::Intersect(const Ray& ray) const
 Intersection BVHAccel::getIntersection(BVHBuildNode* node, const Ray& ray) const
 {
     // TODO Traverse the BVH to find intersection
+    Intersection hit;
+    Bounds3 bound = node->bounds;
 
+    if(!bound.IntersectP(ray,ray.direction_inv,{int(ray.direction.x>0),int(ray.direction.y>0),int(ray.direction.z>0)})) 
+        return hit;
+
+    if(node->left == nullptr && node->right == nullptr){
+        Object* object = node->object;
+        while(object){
+            if(object->intersect(ray)){
+                return object->getIntersection(ray);
+            }
+            object++;
+        }
+    }
+    Intersection hit1 = getIntersection(node->left,ray);
+    Intersection hit2 = getIntersection(node->right,ray);
+    
+    if(hit1.happened || hit2.happened){
+        if(!hit1.happened) return hit2;
+        if(!hit2.happened) return hit1;
+
+        if(hit1.distance < hit2.distance)
+            return hit1;
+        else
+            return hit2;
+
+    }
+ 
+    return hit;
 }
